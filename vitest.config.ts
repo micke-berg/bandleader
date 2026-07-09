@@ -10,7 +10,5 @@ export default defineConfig({
   test: {
     environment: "node",
     include: ["src/**/*.test.ts"],
-    // Scaffold ships before the first tests land (same-day PR). Remove once tests exist.
-    passWithNoTests: true,
   },
 });

@@ -1,0 +1,7 @@
+{"type":"thread.started","thread_id":"019f48d1-de98-7ab2-9a3d-fe4b7c35f1ec"}
+{"type":"turn.started"}
+{"type":"item.completed","item":{"id":"item_0","type":"agent_message","text":"Running it now."}}
+{"type":"item.started","item":{"id":"item_1","type":"command_execution","command":"/bin/zsh -lc 'echo hi'","aggregated_output":"","exit_code":null,"status":"in_progress"}}
+{"type":"item.completed","item":{"id":"item_1","type":"command_execution","command":"/bin/zsh -lc 'echo hi'","aggregated_output":"hi\n","exit_code":0,"status":"completed"}}
+{"type":"item.completed","item":{"id":"item_2","type":"agent_message","text":"hi"}}
+{"type":"turn.completed","usage":{"input_tokens":27510,"cached_input_tokens":23552,"output_tokens":84,"reasoning_output_tokens":10}}

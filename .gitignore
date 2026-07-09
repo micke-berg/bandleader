@@ -1,0 +1,48 @@
+# dependencies
+node_modules/
+/.pnp
+.pnp.*
+
+# testing
+coverage/
+
+# next.js
+.next/
+/out/
+
+# production
+/build
+
+# env files (commit only .env*.example)
+.env*
+!.env*.example
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# editors and local tooling
+.claude/
+.notes/
+.idea/
+.vscode/
+*.local.json
+
+# private scratch files
+PRIVATE-*.md
+NOTES-*.md
+SCRATCH-*.md
+
+# os / misc
+.DS_Store
+._*
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*

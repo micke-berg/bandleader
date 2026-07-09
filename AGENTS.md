@@ -13,8 +13,19 @@ Local-first multi-provider AI agent workbench. It orchestrates the OFFICIAL prov
 
 - `src/lib/adapters/` — the adapter layer. `types.ts` (NormalizedEvent union + Adapter interface), `claude.ts`, `codex.ts`. Pure parser functions are separated from spawning code so they are testable without a CLI.
 - `src/lib/adapters/__fixtures__/` — real captured CLI output (NDJSON/JSONL) used by the parser tests.
-- `scripts/smoke.ts` — live smoke runner: `npm run smoke -- <provider> [prompt]`.
+- `src/lib/router/` — the difficulty router. `router.ts` (the layered pipeline: override → rules → classifier → dispatch/failover → verifier-gated escalation), `rules.ts`, `classifier.ts` (Haiku via the Claude adapter, strict JSON rubric), `memory.ts` (sticky failure memory), `decision-log.ts` (append-only JSONL), `verifier.ts` (shell-command ground truth), `config.ts` (tier map validation, plans-only enforced), `testing.ts` (fake adapters for tests only).
+- `bandleader.config.ts` — the user-editable tier map + routing thresholds. Verify model strings against the real CLIs before changing them.
+- `data/` — gitignored router runtime data (`decisions.jsonl`, `failure-memory.json`).
+- `scripts/smoke.ts` — live adapter smoke: `npm run smoke -- <provider> [prompt]`.
+- `scripts/smoke-router.ts` — live router smoke: `npm run smoke:router`.
 - `src/app/` — Next.js App Router. Placeholder until S3 builds the UI.
+
+## Router invariants
+
+- Transparency: every RouteResult carries the chosen model and a one-line reason. Never route silently.
+- Overrides are absolute: a pinned model is never failed over or escalated.
+- Escalation is verifier-gated, max one hop, sticky (recorded in failure memory), and never downgrades mid-task.
+- The classifier fails safe: parse failure or confidence < 0.6 defaults to mid.
 
 ## Conventions
 

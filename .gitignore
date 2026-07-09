@@ -36,6 +36,9 @@ PRIVATE-*.md
 NOTES-*.md
 SCRATCH-*.md
 
+# router runtime data (decision log, failure memory)
+/data/
+
 # os / misc
 .DS_Store
 ._*

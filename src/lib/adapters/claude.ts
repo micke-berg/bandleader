@@ -88,18 +88,32 @@ export function parseClaudeLine(line: string): NormalizedEvent[] {
     case "rate_limit_event": {
       const info = isRecord(data.rate_limit_info) ? data.rate_limit_info : {};
       const status = str(info.status);
+      if (status === undefined) return [];
+      // Every heartbeat carries the plan window's reset time — surface it
+      // so the UI's quota strip has data. `resetsAt` is epoch seconds.
+      const resetsAtEpoch = num(info.resetsAt);
+      const events: NormalizedEvent[] = [
+        {
+          type: "plan_window",
+          provider: "claude",
+          status,
+          resetsAt:
+            resetsAtEpoch !== undefined
+              ? new Date(resetsAtEpoch * 1000).toISOString()
+              : undefined,
+          windowType: str(info.rateLimitType),
+        },
+      ];
       // "allowed" is the healthy heartbeat; anything else means the plan
       // window is throttling us.
-      if (status !== undefined && status !== "allowed") {
-        return [
-          {
-            type: "rate_limited",
-            retryable: true,
-            detail: `plan rate limit status: ${status}`,
-          },
-        ];
+      if (status !== "allowed") {
+        events.push({
+          type: "rate_limited",
+          retryable: true,
+          detail: `plan rate limit status: ${status}`,
+        });
       }
-      return [];
+      return events;
     }
 
     case "stream_event": {

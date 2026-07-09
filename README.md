@@ -33,7 +33,26 @@ This shape is deliberate. Anthropic only permits subscription usage through the 
 
 ## Status
 
-S2: adapter layer plus router. Two working adapters (Claude, Codex), the difficulty-routing pipeline, a tier map config, and a JSONL decision log. No UI yet.
+S3: adapters, router, and the workbench UI. Two working adapters (Claude, Codex), the difficulty-routing pipeline, a tier map config, a JSONL decision log, and a local web app on top.
+
+## The workbench
+
+![The stage](docs/screenshots/stage-dark.png)
+
+`npm run dev` and open http://localhost:3000. Four screens:
+
+- **The stage** — task composer (project picker, model override, read-only/allow-edits), running and recent tasks as cards, and a quota strip showing each plan's window. Claude's CLI emits a plan-window heartbeat every run (reset time included); Codex has no equivalent, so its card says so instead of pretending.
+- **Task detail** — live streaming transcript (tool calls collapsed, prose prominent), a timeline rail (routed → running → verified/escalated → done), and the escalation history when a task moved.
+- **Chat lane** — quick questions through the same pipeline (`kind: chat`, verification skipped by design). Each message routes independently; there is no session threading in v1.
+- **Telemetry** — the decision log as a table, per-provider status, and a misroute-review flag per routing (flags live in `data/misroutes.json`).
+
+The transparency invariant holds everywhere: every task and chat answer shows the model badge plus the one-line routing reason, and an override (pin a model or a tier) is one click away — on the composer, and as "re-run on…" from any task.
+
+Keyboard: `/` focuses the composer, `j`/`k` move through tasks, `↵` opens, `1`/`2`/`3` switch screens, `⌘↵` dispatches. Dark and light themes, both complete; the toggle is in the top bar.
+
+Task history survives restarts: task records and their event streams append to JSONL under `data/` (gitignored). A task that was mid-run when the server died is marked failed with "interrupted by a server restart" instead of spinning forever.
+
+All design tokens live in [`src/app/tokens.css`](src/app/tokens.css) (foundation copied from the watch-pr family's `app.css`). Markup uses semantic classes only, so a re-skin edits that one file without rewiring components.
 
 ## Routing
 
@@ -65,6 +84,12 @@ cd bandleader
 npm install
 ```
 
+Start the workbench:
+
+```bash
+npm run dev
+```
+
 Run the checks:
 
 ```bash
@@ -90,7 +115,6 @@ No environment variables are needed. The adapters intentionally strip `ANTHROPIC
 
 ## Roadmap
 
-- **S3, UI**: the dashboard and chat lane. Live streams, model badges with routing reasons, session list with resume, telemetry
 - **S4, hardening**: QA sweep and baseline checklist
 
 ## License

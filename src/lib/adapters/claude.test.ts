@@ -54,6 +54,17 @@ describe("parseClaudeLine on the one-shot fixture", () => {
   it("does not emit rate_limited for an allowed rate_limit_event heartbeat", () => {
     expect(events.some((e) => e.type === "rate_limited")).toBe(false);
   });
+
+  it("surfaces the allowed heartbeat as a plan_window event with the reset time", () => {
+    const window = events.find((e) => e.type === "plan_window");
+    expect(window).toEqual({
+      type: "plan_window",
+      provider: "claude",
+      status: "allowed",
+      resetsAt: new Date(1783637400 * 1000).toISOString(),
+      windowType: "five_hour",
+    });
+  });
 });
 
 describe("parseClaudeLine on the resume fixture", () => {
@@ -122,18 +133,31 @@ describe("parseClaudeLine tolerance and edge cases", () => {
     expect(parseClaudeLine(line)).toEqual([]);
   });
 
-  it("maps a non-allowed rate_limit_event to rate_limited", () => {
+  it("maps a non-allowed rate_limit_event to plan_window plus rate_limited", () => {
     const line = JSON.stringify({
       type: "rate_limit_event",
       rate_limit_info: { status: "rejected", rateLimitType: "five_hour" },
     });
     expect(parseClaudeLine(line)).toEqual([
       {
+        type: "plan_window",
+        provider: "claude",
+        status: "rejected",
+        resetsAt: undefined,
+        windowType: "five_hour",
+      },
+      {
         type: "rate_limited",
         retryable: true,
         detail: "plan rate limit status: rejected",
       },
     ]);
+  });
+
+  it("ignores a rate_limit_event without a status", () => {
+    expect(
+      parseClaudeLine('{"type":"rate_limit_event","rate_limit_info":{}}'),
+    ).toEqual([]);
   });
 
   it("maps an error result to an error event with usage still emitted", () => {

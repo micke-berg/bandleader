@@ -24,6 +24,21 @@ export type NormalizedEvent =
       costUsd?: number;
     }
   | { type: "rate_limited"; retryable: boolean; detail: string }
+  | {
+      /**
+       * Plan-window heartbeat. Claude emits one per run with the current
+       * subscription window's status and reset time; Codex has no
+       * equivalent. Informational — a non-"allowed" status additionally
+       * produces a `rate_limited` event.
+       */
+      type: "plan_window";
+      provider: ProviderId;
+      status: string;
+      /** ISO timestamp of when the current plan window resets. */
+      resetsAt?: string;
+      /** Window granularity as reported, e.g. "five_hour". */
+      windowType?: string;
+    }
   | { type: "error"; detail: string }
   | { type: "completed"; resultText: string; sessionId: string };
 

@@ -1,6 +1,6 @@
 # bandleader — agent brief
 
-Local-first multi-provider AI agent workbench. It orchestrates the OFFICIAL provider CLIs (`claude`, `codex`) as subprocesses on the user's own subscription logins, and routes tasks to a model tier by difficulty (router lands in S2, UI in S3).
+Local-first multi-provider AI agent workbench. It orchestrates the OFFICIAL provider CLIs (`claude`, `codex`) as subprocesses on the user's own subscription logins, routes tasks to a model tier by difficulty, and shows all of it in a local Next.js app (stage / task detail / chat lane / telemetry).
 
 ## Hard constraints (never violate)
 
@@ -15,10 +15,17 @@ Local-first multi-provider AI agent workbench. It orchestrates the OFFICIAL prov
 - `src/lib/adapters/__fixtures__/` — real captured CLI output (NDJSON/JSONL) used by the parser tests.
 - `src/lib/router/` — the difficulty router. `router.ts` (the layered pipeline: override → rules → classifier → dispatch/failover → verifier-gated escalation), `rules.ts`, `classifier.ts` (Haiku via the Claude adapter, strict JSON rubric), `memory.ts` (sticky failure memory), `decision-log.ts` (append-only JSONL), `verifier.ts` (shell-command ground truth), `config.ts` (tier map validation, plans-only enforced), `testing.ts` (fake adapters for tests only).
 - `bandleader.config.ts` — the user-editable tier map + routing thresholds. Verify model strings against the real CLIs before changing them.
-- `data/` — gitignored router runtime data (`decisions.jsonl`, `failure-memory.json`).
+- `src/lib/tasks/` — the task manager. `manager.ts` (creates tasks, runs each through the router in the background, buffers RouterEvents for SSE, fans out to subscribers), `store.ts` (JSONL persistence: `tasks.jsonl` append-only snapshots, `task-events/<id>.jsonl`, `plan-windows.json`), `instance.ts` (one manager per server process via globalThis).
+- `src/lib/api/` — route-handler support: `envelope.ts` (`{ok, data} | {ok, error}`), `validate.ts` (hand-rolled body guards; this repo deliberately has no schema dependency), `sse.ts` (SSE framing).
+- `src/lib/telemetry/` — decision-log read side + misroute flags (`data/misroutes.json`).
+- `src/lib/status/` — provider status (PATH + login-artifact checks, never spends quota) and the project-picker listing.
+- `src/lib/client/` — client-safe helpers (typed fetchers, SSE subscription, formatting, transcript folding). Only `import type` from server modules, no node built-ins.
+- `src/app/api/` — route handlers: `tasks` (POST/GET), `tasks/[id]`, `tasks/[id]/stream` (SSE), `telemetry`, `telemetry/flags`, `status`, `projects`.
+- `src/app/` — the four screens: `/` (stage), `/tasks/[id]`, `/chat`, `/telemetry`. `tokens.css` is the ONLY place colour/type/shape live (the re-skin seam; foundation copied from watch-pr's app.css). `ui.css` holds semantic component classes; markup never hardcodes colour.
+- `src/components/` — shared UI (badges, composer, task card, transcript, timeline rail, quota strip). Client components stay under 300 lines.
+- `data/` — gitignored runtime data (`decisions.jsonl`, `failure-memory.json`, `tasks.jsonl`, `task-events/`, `plan-windows.json`, `misroutes.json`).
 - `scripts/smoke.ts` — live adapter smoke: `npm run smoke -- <provider> [prompt]`.
 - `scripts/smoke-router.ts` — live router smoke: `npm run smoke:router`.
-- `src/app/` — Next.js App Router. Placeholder until S3 builds the UI.
 
 ## Router invariants
 
@@ -26,6 +33,7 @@ Local-first multi-provider AI agent workbench. It orchestrates the OFFICIAL prov
 - Overrides are absolute: a pinned model is never failed over or escalated.
 - Escalation is verifier-gated, max one hop, sticky (recorded in failure memory), and never downgrades mid-task.
 - The classifier fails safe: parse failure or confidence < 0.6 defaults to mid.
+- The UI upholds the same invariant: model badge + one-line reason visible on every task card, task detail, chat answer, and telemetry row; an override is always one click away.
 
 ## Conventions
 

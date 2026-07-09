@@ -133,8 +133,11 @@ export function parseCodexLine(line: string): NormalizedEvent[] {
 export const codexAdapter: Adapter = {
   id: "codex",
   displayName: "Codex CLI",
-  // Plan-covered tiers on the ChatGPT plan.
-  models: ["gpt-5.6-terra", "gpt-5.6-sol"],
+  // Plan-covered models on the ChatGPT plan. Sol is NOT addressable on a
+  // plan login (verified live 2026-07-10: `codex exec --model gpt-5.6-sol`
+  // is rejected with "not supported when using Codex with a ChatGPT
+  // account"), so it is deliberately absent.
+  models: ["gpt-5.6-terra"],
 
   async *run(opts: RunOptions): AsyncIterable<NormalizedEvent> {
     // Global flags must precede the `resume` subcommand.

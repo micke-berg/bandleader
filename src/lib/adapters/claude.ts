@@ -165,8 +165,9 @@ export const claudeAdapter: Adapter = {
   id: "claude",
   displayName: "Claude Code",
   // Plan-covered tiers on the Max plan. Aliases resolve to the current
-  // Sonnet / Opus versions.
-  models: ["sonnet", "opus"],
+  // Haiku / Sonnet / Opus versions (verified live 2026-07-10: `--model
+  // haiku` resolves to claude-haiku-4-5 on a Max login).
+  models: ["haiku", "sonnet", "opus"],
 
   async *run(opts: RunOptions): AsyncIterable<NormalizedEvent> {
     const args = [
